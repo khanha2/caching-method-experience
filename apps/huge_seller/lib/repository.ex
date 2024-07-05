@@ -2,6 +2,7 @@ defmodule HugeSeller.Repository do
   alias HugeSeller.LocalCache
   alias HugeSeller.Repo
 
+  alias HugeSeller.Schema.Delivery
   alias HugeSeller.Schema.Store
   alias HugeSeller.Schema.Warehouse
 
@@ -22,6 +23,16 @@ defmodule HugeSeller.Repository do
   def list_cached_warehouses do
     LocalCache.get_or_set("warehouses", fn ->
       Repo.all(Warehouse)
+    end)
+  end
+
+  @doc """
+  List cached deliveries
+  """
+  @spec list_cached_deliveries() :: [Delivery.t()]
+  def list_cached_deliveries do
+    LocalCache.get_or_set("deliveries", fn ->
+      Repo.all(Delivery)
     end)
   end
 end
