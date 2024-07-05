@@ -1,18 +1,18 @@
 defmodule HugeSeller do
-  @moduledoc """
-  Documentation for `HugeSeller`.
+  @doc """
+  Determines a module is a schema
   """
+  def schema do
+    quote do
+      use Ecto.Schema
+      import Ecto.Changeset
+    end
+  end
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> HugeSeller.hello()
-      :world
-
+  When used, dispatch to the appropriate schema/usecase/etc.
   """
-  def hello do
-    :world
+  defmacro __using__(which) when is_atom(which) do
+    apply(__MODULE__, which, [])
   end
 end
