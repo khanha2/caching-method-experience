@@ -4,7 +4,7 @@ defmodule HugeSeller.Schema.StoreWarehouse do
   """
   use HugeSeller, :schema
 
-  schema "stores" do
+  schema "store_warehouses" do
     field(:store_code, :string)
     field(:warehouse_code, :string)
   end
