@@ -25,6 +25,7 @@ defmodule HugeSeller.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:cachex, "~> 3.6"},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.4"},
       {:postgrex, ">= 0.0.0"},
