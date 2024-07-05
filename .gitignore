@@ -30,6 +30,3 @@ erl_crash.dump
 
 # Misc
 .DS_Store
-
-# Update/Migrate private scripts
-scripts
