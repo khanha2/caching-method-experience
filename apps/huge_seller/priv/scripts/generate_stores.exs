@@ -3,7 +3,7 @@ require Logger
 alias HugeSeller.Repo
 alias HugeSeller.Schema.Store
 
-Enum.map(1..1000, fn store_id ->
+Enum.each(1..1000, fn store_id ->
   %Store{}
   |> Store.changeset(%{code: "store_#{store_id}", name: "Store #{store_id}"})
   |> Repo.insert()
