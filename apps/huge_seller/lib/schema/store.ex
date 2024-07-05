@@ -1,6 +1,6 @@
 defmodule HugeSeller.Schema.Store do
   @moduledoc """
-  DB schema for the store
+  DB schema for storing stores
   """
   use HugeSeller, :schema
 
