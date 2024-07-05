@@ -27,7 +27,8 @@ defmodule HugeSeller.MixProject do
     [
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.4"},
-      {:postgrex, ">= 0.0.0"}
+      {:postgrex, ">= 0.0.0"},
+      {:tarams, "~> 1.0.0"}
     ]
   end
 end
