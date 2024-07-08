@@ -6,6 +6,8 @@ defmodule HugeSeller.Schema.Order do
 
   schema "orders" do
     field(:code, :string)
+    field(:status, :string)
+    field(:platform_status, :string)
     field(:created_at, :utc_datetime)
 
     field(:store_code, :string)
