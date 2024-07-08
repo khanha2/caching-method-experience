@@ -6,6 +6,8 @@ defmodule HugeSeller.Application do
     children = [
       # Start the Ecto repository
       HugeSeller.Repo,
+      # Start the ElasticSearch cluster
+      HugeSeller.ElasticCluster,
       # Start the cache store
       HugeSeller.LocalCache.create_connection_spec()
     ]
