@@ -11,6 +11,7 @@ defmodule HugeSeller.Schema.Order do
     field(:store_code, :string)
 
     has_many(:items, HugeSeller.Schema.OrderItem)
+    has_many(:shipments, HugeSeller.Schema.Shipment)
 
     timestamps()
   end
