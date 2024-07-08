@@ -7,6 +7,8 @@ defmodule HugeSeller.Schema.ShipmentStatus do
 
   def shipped, do: "shipped"
 
+  def cancelled, do: "cancelled"
+
   def enum do
     [new(), packed(), ready_to_ship(), shipped()]
   end
@@ -35,6 +37,7 @@ defmodule HugeSeller.Schema.Shipment do
     field(:order_code, :string)
     field(:store_code, :string)
     field(:warehouse_code, :string)
+    field(:package_code, :string)
     field(:type, :string)
     field(:status, :string)
     field(:created_at, :utc_datetime)

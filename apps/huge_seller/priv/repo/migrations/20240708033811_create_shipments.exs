@@ -7,6 +7,7 @@ defmodule HugeSeller.Repo.Migrations.CreateShipments do
       add(:order_code, :text)
       add(:store_code, :text)
       add(:warehouse_code, :text)
+      add(:package_code, :text)
       add(:type, :text)
       add(:status, :text)
       add(:created_at, :naive_datetime)
