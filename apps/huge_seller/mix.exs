@@ -28,6 +28,8 @@ defmodule HugeSeller.MixProject do
     [
       {:cachex, "~> 3.6"},
       {:ecto_sql, "~> 3.0"},
+      {:hackney, "~> 1.20"},
+      {:httpoison, "~> 2.0"},
       {:jason, "~> 1.4"},
       {:postgrex, ">= 0.0.0"},
       {:tarams, "~> 1.0.0"},
