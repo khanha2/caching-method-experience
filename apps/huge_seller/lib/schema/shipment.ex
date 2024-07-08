@@ -26,19 +26,17 @@ end
 
 defmodule HugeSeller.Schema.Shipment do
   @moduledoc """
-  DB schema for storing orders
+  DB schema for storing shipments
   """
   use HugeSeller, :schema
-
-  alias HugeSeller.Schema.ShipmentStatus
-  alias HugeSeller.Schema.ShipmentType
 
   schema "shipments" do
     field(:code, :string)
     field(:order_code, :string)
     field(:store_code, :string)
-    field(:type, :string, default: ShipmentType.main())
-    field(:status, :string, default: ShipmentStatus.new())
+    field(:warehouse_code, :string)
+    field(:type, :string)
+    field(:status, :string)
     field(:created_at, :utc_datetime)
 
     # has_many(:items, HugeSeller.Schema.ShipmentItem)
@@ -50,7 +48,10 @@ defmodule HugeSeller.Schema.Shipment do
     :code,
     :order_code,
     :store_code,
-    :created_at
+    :warehouse_code,
+    :created_at,
+    :type,
+    :status
   ]
 
   def changeset(order, params \\ %{}) do
