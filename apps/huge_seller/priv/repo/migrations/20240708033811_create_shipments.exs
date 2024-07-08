@@ -12,6 +12,8 @@ defmodule HugeSeller.Repo.Migrations.CreateShipments do
       add(:status, :text)
       add(:created_at, :naive_datetime)
 
+      add(:order_id, references(:orders, on_delete: :nilify_all))
+
       timestamps(default: fragment("NOW()"))
     end
 

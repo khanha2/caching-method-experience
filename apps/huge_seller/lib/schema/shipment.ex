@@ -42,6 +42,7 @@ defmodule HugeSeller.Schema.Shipment do
     field(:status, :string)
     field(:created_at, :utc_datetime)
 
+    belongs_to(:order, HugeSeller.Schema.Order)
     has_many(:items, HugeSeller.Schema.ShipmentItem)
 
     timestamps()
