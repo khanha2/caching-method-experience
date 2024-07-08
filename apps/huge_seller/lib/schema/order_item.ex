@@ -8,6 +8,7 @@ defmodule HugeSeller.Schema.OrderItem do
     field(:product_sku, :string)
     field(:warehouse_code, :string)
     field(:package_code, :string)
+    field(:quantity, :integer)
 
     belongs_to(:order, HugeSeller.Schema.Order)
 

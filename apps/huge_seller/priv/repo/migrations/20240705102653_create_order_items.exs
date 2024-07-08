@@ -6,6 +6,7 @@ defmodule HugeSeller.Repo.Migrations.CreateOrderItems do
       add(:product_sku, :text)
       add(:warehouse_code, :text)
       add(:package_code, :text)
+      add(:quantity, :integer)
 
       add(:order_id, references(:orders, on_delete: :delete_all))
 
