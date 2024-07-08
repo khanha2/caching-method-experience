@@ -9,6 +9,8 @@ defmodule HugeSeller.Repo.Migrations.CreateShipmentItems do
       add(:product_sku, :text)
       add(:quantity, :integer)
 
+      add(:shipment_id, references(:shipments, on_delete: :delete_all))
+
       timestamps(default: fragment("NOW()"))
     end
 
