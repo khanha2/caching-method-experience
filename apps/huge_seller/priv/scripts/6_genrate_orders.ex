@@ -1,7 +1,8 @@
 defmodule GenerateOrders do
   alias Ecto.Multi
 
-  alias HugeSeller.Order
+  alias HugeSeller.Schema.Order
+  alias HugeSeller.Schema.Shipment
   alias HugeSeller.Schema.ShipmentStatus
   alias HugeSeller.Schema.ShipmentType
 
@@ -45,9 +46,9 @@ defmodule GenerateOrders do
     |> insert_order(number)
     |> insert_order_items(number)
     |> insert_shipments()
-    |> Repo.transaction()
+    |> HugeSeller.Repo.transaction()
     |> case do
-      {:ok, order} ->
+      {:ok, %{order: order}} ->
         IO.inspect("created order: #{order.code}")
 
       _error ->
@@ -80,14 +81,21 @@ defmodule GenerateOrders do
         }
       end)
 
-    Multi.insert_all(multi, :order_items, fn %{order: order} ->
-      Enum.map(items, &Map.put(&1, :order_id, order.id))
-    end)
+    Multi.insert_all(
+      multi,
+      :order_items,
+      HugeSeller.Schema.OrderItem,
+      fn %{order: order} ->
+        Enum.map(items, &Map.put(&1, :order_id, order.id))
+      end,
+      returning: true
+    )
   end
 
   defp insert_shipments(multi) do
-    Multi.run(multi, :shipments, fn repo, %{order: order, order_items: items} ->
+    Multi.run(multi, :shipments, fn repo, %{order: order, order_items: {_count, items}} ->
       insert_shipments_with_repo(order, items, repo)
+      {:ok, nil}
     end)
   end
 
@@ -99,12 +107,15 @@ defmodule GenerateOrders do
       prepare_package_shipments(warehouse_code, package_code, order, index, items)
     end)
     |> Enum.concat()
-    |> Enum.each(fn {shipment, items} ->
-      {:ok, shipment} = repo.insert(shipment)
+    |> Enum.each(fn {raw_shipment, raw_items} ->
+      {:ok, shipment} =
+        %Shipment{}
+        |> Shipment.changeset(raw_shipment)
+        |> repo.insert()
 
-      items = Enum.map(items, &Map.put(&1, :shipment_id, shipment.id))
+      raw_items = Enum.map(raw_items, &Map.put(&1, :shipment_id, shipment.id))
 
-      repo.insert_all(HugeSeller.Schema.ShipmentItem, items)
+      repo.insert_all(HugeSeller.Schema.ShipmentItem, raw_items)
     end)
   end
 
@@ -117,7 +128,7 @@ defmodule GenerateOrders do
 
     main_shipment =
       if has_refulfilled_shipment do
-        Map.put(shipment, :status, ShipmentStatus.cancelled())
+        Map.put(main_shipment, :status, ShipmentStatus.cancelled())
       else
         main_shipment
       end
@@ -129,7 +140,7 @@ defmodule GenerateOrders do
         []
       end
 
-    [main_shipment | refulfilled_shipments]
+    [{main_shipment, main_shipment_items} | refulfilled_shipments]
   end
 
   defp prepare_main_shipment(warehouse_code, package_code, order, index, order_items) do
@@ -141,6 +152,7 @@ defmodule GenerateOrders do
       store_code: order.store_code,
       warehouse_code: warehouse_code,
       package_code: package_code,
+      order_id: order.id,
       type: ShipmentType.main(),
       status: ShipmentStatus.new(),
       created_at: DateTime.utc_now()
@@ -181,7 +193,7 @@ defmodule GenerateOrders do
           ShipmentStatus.cancelled()
         end
 
-      code = "#{main_shipment.shipment_code}-RF-#{number}"
+      code = "#{main_shipment.code}-RF-#{number}"
 
       shipment =
         Map.merge(main_shipment, %{code: code, type: ShipmentType.refulfilling(), status: status})
@@ -203,3 +215,5 @@ defmodule GenerateOrders do
     end)
   end
 end
+
+GenerateOrders.perform(1)
