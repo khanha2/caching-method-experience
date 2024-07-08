@@ -1,0 +1,21 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "text"
+      },
+      "code": {
+        "type": "text"
+      },
+      "store_code": {
+        "type": "text"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "updated_at": {
+        "type": "date"
+      }
+    }
+  }
+}
