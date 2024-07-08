@@ -48,8 +48,14 @@ defmodule GenerateOrders do
     |> insert_shipments()
     |> HugeSeller.Repo.transaction()
     |> case do
-      {:ok, %{order: order}} ->
-        IO.inspect("created order: #{order.code}")
+      {:ok, changes} ->
+        order = changes[:order]
+        {_count, items} = changes[:order_items]
+        shipments = changes[:shipments]
+
+        order = Map.merge(order, %{items: items, shipments: shipments})
+
+        HugeSeller.Usecase.CacheOrder.perform(order)
 
       _error ->
         nil
@@ -94,8 +100,8 @@ defmodule GenerateOrders do
 
   defp insert_shipments(multi) do
     Multi.run(multi, :shipments, fn repo, %{order: order, order_items: {_count, items}} ->
-      insert_shipments_with_repo(order, items, repo)
-      {:ok, nil}
+      shipments = insert_shipments_with_repo(order, items, repo)
+      {:ok, shipments}
     end)
   end
 
@@ -107,7 +113,7 @@ defmodule GenerateOrders do
       prepare_package_shipments(warehouse_code, package_code, order, index, items)
     end)
     |> Enum.concat()
-    |> Enum.each(fn {raw_shipment, raw_items} ->
+    |> Enum.map(fn {raw_shipment, raw_items} ->
       {:ok, shipment} =
         %Shipment{}
         |> Shipment.changeset(raw_shipment)
@@ -115,7 +121,10 @@ defmodule GenerateOrders do
 
       raw_items = Enum.map(raw_items, &Map.put(&1, :shipment_id, shipment.id))
 
-      repo.insert_all(HugeSeller.Schema.ShipmentItem, raw_items)
+      {_count, items} =
+        repo.insert_all(HugeSeller.Schema.ShipmentItem, raw_items, returning: true)
+
+      Map.put(shipment, :items, items)
     end)
   end
 
