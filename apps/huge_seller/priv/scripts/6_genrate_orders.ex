@@ -35,6 +35,16 @@ defmodule GenerateOrders do
     "SKU-7" => ["SKU-7.1", "SKU-7.2", "SKU-7.3"]
   }
 
+  @warehouse_codes ["WH1", "WH2", "WH3"]
+
+  @warehouse_platform_map %{
+    "WH1" => "WP1",
+    "WH2" => "WP2",
+    "WH3" => "WP1"
+  }
+
+  @delivery_platform_codes ["DL1", "DL2"]
+
   def perform(total) do
     Enum.each(1..total, fn number ->
       create_order(number)
@@ -57,7 +67,7 @@ defmodule GenerateOrders do
 
         Elasticsearch.put_document(HugeSeller.ElasticCluster, order, "orders")
 
-        HugeSeller.Usecase.CacheOrder.perform(order)
+        HugeSeller.Usecase.CreateOrderCache.perform(order)
 
       _error ->
         nil
@@ -82,9 +92,11 @@ defmodule GenerateOrders do
         quantity = Enum.random(1..5)
         package_number = Enum.random(1..2)
 
+        warehouse_code = Enum.random(@warehouse_codes)
+
         %{
           product_sku: sku,
-          warehouse_code: "W1",
+          warehouse_code: warehouse_code,
           package_code: "P#{package_number}",
           quantity: quantity
         }
@@ -158,12 +170,38 @@ defmodule GenerateOrders do
   defp prepare_main_shipment(warehouse_code, package_code, order, index, order_items) do
     shipment_code = "#{order.code}-#{index}"
 
+    delivery_platform_code = Enum.random(@delivery_platform_codes)
+
+    warehouse_status =
+      case Enum.random([true, false]) do
+        true ->
+          "wh_#{ShipmentStatus.new()}"
+
+        false ->
+          nil
+      end
+
+    delivery_status =
+      case Enum.random([true, false]) do
+        true ->
+          "dl_#{ShipmentStatus.new()}"
+
+        false ->
+          nil
+      end
+
     shipment = %{
       code: shipment_code,
       order_code: order.code,
       store_code: order.store_code,
+      warehouse_platform_code: @warehouse_platform_map[warehouse_code],
       warehouse_code: warehouse_code,
+      warehouse_shipment_code: "#{warehouse_code}-#{shipment_code}",
+      warehouse_status: warehouse_status,
       package_code: package_code,
+      delivery_platform_code: delivery_platform_code,
+      delivery_status: delivery_status,
+      tracking_code: "T#{shipment_code}",
       order_id: order.id,
       type: ShipmentType.main(),
       status: ShipmentStatus.new(),
@@ -218,6 +256,7 @@ defmodule GenerateOrders do
             order_code: main_shipment.order_code,
             store_code: main_shipment.store_code,
             shipment_code: code,
+            tracking_code: "T#{code}",
             product_sku: sku,
             quantity: 1
           }
@@ -228,4 +267,4 @@ defmodule GenerateOrders do
   end
 end
 
-GenerateOrders.perform(10000)
+GenerateOrders.perform(1)
