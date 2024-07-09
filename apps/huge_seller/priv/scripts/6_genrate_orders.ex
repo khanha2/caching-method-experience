@@ -1,4 +1,5 @@
 defmodule GenerateOrders do
+  require Logger
   alias Ecto.Multi
 
   alias HugeSeller.Schema.Order
@@ -56,8 +57,12 @@ defmodule GenerateOrders do
   end
 
   defp create_order(number, starting_time, orders_per_second) do
+    seconds = orders_per_second * div(number, orders_per_second)
+    created_at = DateTime.add(starting_time, seconds)
+    Logger.info("Creating order #{number} at #{created_at}")
+
     Multi.new()
-    |> insert_order(number, starting_time, orders_per_second)
+    |> insert_order(number, created_at)
     |> insert_order_items(number)
     |> insert_shipments()
     |> HugeSeller.Repo.transaction()
@@ -78,13 +83,11 @@ defmodule GenerateOrders do
     end
   end
 
-  defp insert_order(multi, number, starting_time, orders_per_second) do
-    seconds = orders_per_second * div(number, orders_per_second)
-
+  defp insert_order(multi, number, created_at) do
     params = %{
       code: "O#{number}",
       store_code: "S1",
-      created_at: DateTime.add(starting_time, seconds),
+      created_at: created_at,
       platform_status: "pl_new"
     }
 

@@ -15,3 +15,6 @@ config :huge_seller, HugeSeller.ElasticCluster,
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
+
+# Log level
+config :logger, level: :info
