@@ -15,17 +15,22 @@ defmodule HugeSeller.Schema.OrderItem do
     timestamps()
   end
 
-  @fields [
-    :product_sku,
-    :warehouse_code,
-    :delivery_code,
-    :package_code,
-    :order_id
+  @default_fields [
+    :id,
+    :inserted_at,
+    :updated_at
   ]
 
-  def changeset(order_item, params \\ %{}) do
+  @required_fields [
+    :product_sku,
+    :warehouse_code,
+    :package_code,
+    :quantity
+  ]
+
+  def changeset(order_item, attrs) do
     order_item
-    |> cast(params, @fields)
-    |> validate_required(@fields)
+    |> cast(attrs, __MODULE__.__schema__(:fields) -- @default_fields)
+    |> validate_required(@required_fields)
   end
 end

@@ -54,7 +54,13 @@ defmodule HugeSeller.Schema.Shipment do
     timestamps()
   end
 
-  @fields [
+  @default_fields [
+    :id,
+    :inserted_at,
+    :updated_at
+  ]
+
+  @required_fields [
     :code,
     :order_code,
     :store_code,
@@ -64,10 +70,10 @@ defmodule HugeSeller.Schema.Shipment do
     :status
   ]
 
-  def changeset(order, params \\ %{}) do
-    order
-    |> cast(params, @fields)
-    |> validate_required(@fields)
+  def changeset(shipment, attrs) do
+    shipment
+    |> cast(attrs, __MODULE__.__schema__(:fields) -- @default_fields)
+    |> validate_required(@required_fields)
     |> unique_constraint(:code)
   end
 end

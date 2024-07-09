@@ -38,16 +38,20 @@ defmodule HugeSeller.Schema.Order do
     timestamps()
   end
 
-  @fields [
-    :code,
-    :store_code,
-    :created_at
+  @default_fields [
+    :id,
+    :inserted_at,
+    :updated_at
   ]
 
-  def changeset(order, params \\ %{}) do
+  @required_fields [
+    :code
+  ]
+
+  def changeset(order, attrs) do
     order
-    |> cast(params, @fields)
-    |> validate_required(@fields)
+    |> cast(attrs, __MODULE__.__schema__(:fields) -- @default_fields)
+    |> validate_required(@required_fields)
     |> unique_constraint(:code)
   end
 end
