@@ -147,7 +147,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     %{"terms" => %{"order_code" => value}}
   end
 
-  defp build_platform_skus_condition(:platform_skus, value) do
+  defp build_order_condition(:platform_skus, value) do
     %{"terms" => %{"platform_skus" => value, "minimum_should_match" => 1}}
   end
 
@@ -189,7 +189,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     %{"terms" => %{"shipments.code" => value}}
   end
 
-  defp build_platform_skus_condition(:shipment_warehouse_skus, value) do
+  defp build_shipment_condition(:shipment_warehouse_skus, value) do
     %{"terms" => %{"shipments.warehouse_skus" => value, "minimum_should_match" => 1}}
   end
 
