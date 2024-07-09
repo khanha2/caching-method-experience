@@ -2,9 +2,8 @@ defmodule HugeSeller.EsPaginator do
   @moduledoc """
   Build and query data with pagination
   """
-  import Ecto.Query, only: [from: 2]
-
   @default_page 1
+
   @default_size 20
 
   @schema %{
