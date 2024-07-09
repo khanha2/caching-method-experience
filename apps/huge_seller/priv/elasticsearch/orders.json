@@ -7,14 +7,58 @@
       "code": {
         "type": "text"
       },
+      "platform_code": {
+        "type": "text"
+      },
       "store_code": {
+        "type": "text"
+      },
+      "group_brand_code": {
+        "type": "text"
+      },
+      "status": {
+        "type": "text"
+      },
+      "platform_order_code": {
+        "type": "text"
+      },
+      "platform_status": {
         "type": "text"
       },
       "created_at": {
         "type": "date"
       },
-      "updated_at": {
-        "type": "date"
+      "shipments": {
+        "type": "nested",
+        "properties": {
+          "code": {
+            "type": "text"
+          },
+          "type": {
+            "type": "text"
+          },
+          "created_at": {
+            "type": "date"
+          },
+          "warehouse_platform_code": {
+            "type": "text"
+          },
+          "warehouse_code": {
+            "type": "text"
+          },
+          "status": {
+            "type": "text"
+          },
+          "warehouse_status": {
+            "type": "text"
+          },
+          "delivery_platform_code": {
+            "type": "text"
+          },
+          "delivery_status": {
+            "type": "text"
+          }
+        }
       }
     }
   }
