@@ -25,6 +25,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     # Platform
     platform_order_code: :string,
     platform_status: :string,
+    platform_skus: [type: {:array, :string}, cast_func: &Parser.to_string_array/1],
 
     # Shipment
     shipment_codes: [type: {:array, :string}, cast_func: &Parser.to_string_array/1],
@@ -36,7 +37,8 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     shipment_status: :string,
     shipment_warehouse_status: :string,
     shipment_delivery_platform_code: :string,
-    shipment_delivery_status: :string
+    shipment_delivery_status: :string,
+    shipment_warehouse_skus: [type: {:array, :string}, cast_func: &Parser.to_string_array/1]
   }
 
   @order_fields [
@@ -46,7 +48,8 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     :group_brand_code,
     :status,
     :platform_order_code,
-    :platform_status
+    :platform_status,
+    :platform_skus
   ]
 
   @shipment_fields [
@@ -57,7 +60,8 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     :shipment_status,
     :shipment_warehouse_status,
     :shipment_delivery_platform_code,
-    :shipment_delivery_status
+    :shipment_delivery_status,
+    :shipment_warehouse_skus
   ]
 
   def perform(params) do
@@ -143,6 +147,10 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     %{"terms" => %{"order_code" => value}}
   end
 
+  defp build_platform_skus_condition(:platform_skus, value) do
+    %{"terms" => %{"platform_skus" => value, "minimum_should_match" => 1}}
+  end
+
   defp build_order_condition(key, value) do
     %{"term" => %{to_string(key) => value}}
   end
@@ -179,6 +187,10 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
 
   defp build_shipment_condition(:shipment_codes, value) do
     %{"terms" => %{"shipments.code" => value}}
+  end
+
+  defp build_platform_skus_condition(:shipment_warehouse_skus, value) do
+    %{"terms" => %{"shipments.warehouse_skus" => value, "minimum_should_match" => 1}}
   end
 
   defp build_shipment_condition(key, value) do
