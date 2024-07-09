@@ -73,7 +73,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
             acc
 
           {key, value}, acc ->
-            build_order_condition(key, value)
+            Map.merge(acc, build_order_condition(key, value))
         end)
 
       shipment_created_time_condition_map =
@@ -87,7 +87,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
             acc
 
           {key, value}, acc ->
-            build_shipment_condition(key, value)
+            Map.merge(acc, build_shipment_condition(key, value))
         end)
 
       condition_map =
