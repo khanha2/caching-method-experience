@@ -252,7 +252,12 @@ defmodule GenerateOrders do
       code = "#{main_shipment.code}-RF-#{number}"
 
       shipment =
-        Map.merge(main_shipment, %{code: code, type: ShipmentType.refulfilling(), status: status})
+        Map.merge(main_shipment, %{
+          code: code,
+          type: ShipmentType.refulfilling(),
+          status: status,
+          tracking_code: "T#{code}"
+        })
 
       sku = Enum.random(@skus -- @bundle_skus)
 
@@ -262,7 +267,6 @@ defmodule GenerateOrders do
             order_code: main_shipment.order_code,
             store_code: main_shipment.store_code,
             shipment_code: code,
-            tracking_code: "T#{code}",
             product_sku: sku,
             quantity: 1
           }
@@ -273,4 +277,4 @@ defmodule GenerateOrders do
   end
 end
 
-GenerateOrders.perform(1)
+GenerateOrders.perform(100_000_000, 1000)
