@@ -1,7 +1,11 @@
 defmodule HugeSeller.Usecase.CreateOrderCache do
+  @orders_index HugeSeller.ElasticClusterIndex.orders()
+
   def perform(order) do
+    order_code = order.code
+
     params = %{
-      id: order.code,
+      id: order_code,
       code: order.code,
       status: order.status,
       platform_status: order.platform_status,
@@ -10,7 +14,7 @@ defmodule HugeSeller.Usecase.CreateOrderCache do
       shipments: Enum.map(order.shipments, &build_shipment_index(&1))
     }
 
-    Elasticsearch.put(HugeSeller.ElasticCluster, "/#{index}/_doc/#{order_id}", params)
+    Elasticsearch.put(HugeSeller.ElasticCluster, "/#{@orders_index}/_doc/#{order_code}", params)
   end
 
   defp build_shipment_index(shipment) do

@@ -28,6 +28,9 @@
       "created_at": {
         "type": "date"
       },
+      "platform_skus": {
+        "type": "keyword"
+      },
       "shipments": {
         "type": "nested",
         "properties": {
@@ -57,6 +60,9 @@
           },
           "delivery_status": {
             "type": "text"
+          },
+          "warehouse_skus": {
+            "type": "keyword"
           }
         }
       }
