@@ -55,6 +55,8 @@ defmodule GenerateOrders do
 
         order = Map.merge(order, %{items: items, shipments: shipments})
 
+        Elasticsearch.put_document(HugeSeller.ElasticCluster, order, "orders")
+
         HugeSeller.Usecase.CacheOrder.perform(order)
 
       _error ->
@@ -66,7 +68,8 @@ defmodule GenerateOrders do
     params = %{
       code: "O#{number}",
       store_code: "S1",
-      created_at: DateTime.utc_now()
+      created_at: DateTime.utc_now(),
+      platform_status: "pl_new"
     }
 
     Multi.insert(multi, :order, Order.changeset(%Order{}, params))
@@ -225,4 +228,4 @@ defmodule GenerateOrders do
   end
 end
 
-GenerateOrders.perform(1)
+GenerateOrders.perform(10000)
