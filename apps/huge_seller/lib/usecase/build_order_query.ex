@@ -40,78 +40,77 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     shipment_delivery_platform_code: :string,
     shipment_delivery_status: :string
   }
-end
 
-@order_fields [
-  :order_codes,
-  :platform_code,
-  :store_code,
-  :group_brand_code,
-  :status,
-  :platform_order_code,
-  :platform_status
-]
+  @order_fields [
+    :order_codes,
+    :platform_code,
+    :store_code,
+    :group_brand_code,
+    :status,
+    :platform_order_code,
+    :platform_status
+  ]
 
-@shipment_fields [
-  :shipment_codes,
-  :shipment_type,
-  :shipment_warehouse_platform_code,
-  :shipment_warehouse_code,
-  :shipment_status,
-  :shipment_warehouse_status,
-  :shipment_delivery_platform_code,
-  :shipment_delivery_status
-]
+  @shipment_fields [
+    :shipment_codes,
+    :shipment_type,
+    :shipment_warehouse_platform_code,
+    :shipment_warehouse_code,
+    :shipment_status,
+    :shipment_warehouse_status,
+    :shipment_delivery_platform_code,
+    :shipment_delivery_status
+  ]
 
-def perform(params) do
-  with {:ok, data} <- Parser.cast(params, @schema) do
-    query =
-      from(HugeSeller.Schema.Order, as: :order)
-      |> build_created_time_condition(data[:created_from], data[:created_to])
-
-    query =
-      params
-      |> Map.take(@order_fields)
-      |> Enum.reduce(query, fn
-        {_key, nil}, acc ->
-          acc
-
-        {key, value}, acc ->
-          build_order_condition(acc, key, value)
-      end)
-
-    has_shipment_query =
-      shipments
-      |> Map.take(@shipment_fields ++ [:shipment_created_from, :shipment_created_to])
-      |> Map.keys()
-      |> case do
-        [] -> false
-        _ -> true
-      end
-
-    shipment_query =
-      from(HugeSeller.Schema.Shipment, as: :shipment)
-      |> build_shipment_created_time_condition(
-        data[:shipment_created_from],
-        data[:shipment_created_to]
-      )
-
-    shipment_query =
-      params
-      |> Map.take(@shipment_fields)
-      |> Enum.reduce(shipment_query, fn
-        {_key, nil}, acc ->
-          acc
-
-        {key, value}, acc ->
-          build_shipment_condition(acc, key, value)
-      end)
-
-    if has_shipment_query do
+  def perform(params) do
+    with {:ok, data} <- Parser.cast(params, @schema) do
       query =
+        from(HugeSeller.Schema.Order, as: :order)
+        |> build_created_time_condition(data[:created_from], data[:created_to])
+
+      query =
+        params
+        |> Map.take(@order_fields)
+        |> Enum.reduce(query, fn
+          {_key, nil}, acc ->
+            acc
+
+          {key, value}, acc ->
+            build_order_condition(acc, key, value)
+        end)
+
+      has_shipment_query =
+        params
+        |> Map.take(@shipment_fields ++ [:shipment_created_from, :shipment_created_to])
+        |> Map.keys()
+        |> case do
+          [] -> false
+          _ -> true
+        end
+
+      shipment_query =
+        from(HugeSeller.Schema.Shipment, as: :shipment)
+        |> build_shipment_created_time_condition(
+          data[:shipment_created_from],
+          data[:shipment_created_to]
+        )
+
+      shipment_query =
+        params
+        |> Map.take(@shipment_fields)
+        |> Enum.reduce(shipment_query, fn
+          {_key, nil}, acc ->
+            acc
+
+          {key, value}, acc ->
+            build_shipment_condition(acc, key, value)
+        end)
+
+      if has_shipment_query do
         where(query, exists(where(shipment_query, order_id: parent_as(:order).id)))
-    else
-      {:ok, query}
+      else
+        {:ok, query}
+      end
     end
   end
 
