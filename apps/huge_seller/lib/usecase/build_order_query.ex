@@ -27,6 +27,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     # Platform
     platform_order_code: :string,
     platform_status: :string,
+    platform_skus: [type: {:array, :string}, cast_func: &Parser.to_string_array/1],
 
     # Shipment
     shipment_codes: [type: {:array, :string}, cast_func: &Parser.to_string_array/1],
@@ -38,7 +39,8 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     shipment_status: :string,
     shipment_warehouse_status: :string,
     shipment_delivery_platform_code: :string,
-    shipment_delivery_status: :string
+    shipment_delivery_status: :string,
+    shipment_warehouse_skus: [type: {:array, :string}, cast_func: &Parser.to_string_array/1]
   }
 
   @order_fields [
@@ -48,7 +50,8 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     :group_brand_code,
     :status,
     :platform_order_code,
-    :platform_status
+    :platform_status,
+    :platform_skus
   ]
 
   @shipment_fields [
@@ -59,7 +62,8 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     :shipment_status,
     :shipment_warehouse_status,
     :shipment_delivery_platform_code,
-    :shipment_delivery_status
+    :shipment_delivery_status,
+    :shipment_warehouse_skus
   ]
 
   def perform(params) do
@@ -137,6 +141,13 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
     where(query, [order], order.code in ^value)
   end
 
+  defp build_order_condition(query, :platform_skus, value) do
+    item_query =
+      where(HugeSeller.Schema.OrderItem, [item], item.product_sku in ^value)
+
+    where(query, exists(where(item_query, order_id: parent_as(:order).id)))
+  end
+
   defp build_order_condition(query, key, value) do
     where(query, [order], field(order, ^key) == ^value)
   end
@@ -164,6 +175,13 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
 
   defp build_shipment_condition(query, :shipment_codes, value) do
     where(query, [shipment], shipment.code in ^value)
+  end
+
+  defp build_shipment_condition(query, :shipment_skus, value) do
+    shipment_item_query =
+      where(HugeSeller.Schema.ShipmentItem, [item], item.product_sku in ^value)
+
+    where(query, exists(where(shipment_item_query, order_id: parent_as(:shipment).id)))
   end
 
   defp build_shipment_condition(query, key, value) do
