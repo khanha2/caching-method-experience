@@ -38,74 +38,74 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
     shipment_delivery_platform_code: :string,
     shipment_delivery_status: :string
   }
-end
 
-@order_fields [
-  :order_codes,
-  :platform_code,
-  :store_code,
-  :group_brand_code,
-  :status,
-  :platform_order_code,
-  :platform_status
-]
+  @order_fields [
+    :order_codes,
+    :platform_code,
+    :store_code,
+    :group_brand_code,
+    :status,
+    :platform_order_code,
+    :platform_status
+  ]
 
-@shipment_fields [
-  :shipment_codes,
-  :shipment_type,
-  :shipment_warehouse_platform_code,
-  :shipment_warehouse_code,
-  :shipment_status,
-  :shipment_warehouse_status,
-  :shipment_delivery_platform_code,
-  :shipment_delivery_status
-]
+  @shipment_fields [
+    :shipment_codes,
+    :shipment_type,
+    :shipment_warehouse_platform_code,
+    :shipment_warehouse_code,
+    :shipment_status,
+    :shipment_warehouse_status,
+    :shipment_delivery_platform_code,
+    :shipment_delivery_status
+  ]
 
-def perform(params) do
-  with {:ok, data} <- Parser.cast(params, @schema) do
-    created_time_condition_map =
-      build_created_time_condition(data[:created_from], data[:created_to])
+  def perform(params) do
+    with {:ok, data} <- Parser.cast(params, @schema) do
+      created_time_condition_map =
+        build_created_time_condition(data[:created_from], data[:created_to])
 
-    condition_map =
-      params
-      |> Map.take(@order_fields)
-      |> Enum.reduce(created_time_condition_map, fn
-        {_key, nil}, acc ->
-          acc
+      condition_map =
+        params
+        |> Map.take(@order_fields)
+        |> Enum.reduce(created_time_condition_map, fn
+          {_key, nil}, acc ->
+            acc
 
-        {key, value}, acc ->
-          build_order_condition(key, value)
-      end)
+          {key, value}, acc ->
+            build_order_condition(key, value)
+        end)
 
-    shipment_created_time_condition_map =
-      build_created_time_condition(data[:shipment_created_from], data[:shipment_created_to])
+      shipment_created_time_condition_map =
+        build_created_time_condition(data[:shipment_created_from], data[:shipment_created_to])
 
-    shipment_condition_map =
-      params
-      |> Map.take(@shipment_fields)
-      |> Enum.reduce(shipment_created_time_condition_map, fn
-        {_key, nil}, acc ->
-          acc
+      shipment_condition_map =
+        params
+        |> Map.take(@shipment_fields)
+        |> Enum.reduce(shipment_created_time_condition_map, fn
+          {_key, nil}, acc ->
+            acc
 
-        {key, value}, acc ->
-          build_shipment_condition(key, value)
-      end)
+          {key, value}, acc ->
+            build_shipment_condition(key, value)
+        end)
 
-    condition_map =
-      if Map.keys(shipment_condition_map) == [] do
-        condition_map
-      else
-        Map.put(
-          condition_map,
-          "nested",
-          %{
-            "path" => "shipments",
-            "query" => %{"match_all" => shipment_condition_map}
-          }
-        )
-      end
+      condition_map =
+        if Map.keys(shipment_condition_map) == [] do
+          condition_map
+        else
+          Map.put(
+            condition_map,
+            "nested",
+            %{
+              "path" => "shipments",
+              "query" => %{"match_all" => shipment_condition_map}
+            }
+          )
+        end
 
-    {:ok, %{"query" => %{"match_all" => condition_map}}}
+      {:ok, %{"query" => %{"match_all" => condition_map}}}
+    end
   end
 
   # 1. Build order condition
