@@ -45,15 +45,19 @@ defmodule GenerateOrders do
 
   @delivery_platform_codes ["DL1", "DL2"]
 
-  def perform(total) do
+  def perform(total, orders_per_second \\ 1) do
+    starting_time =
+      HugeSeller.DateTimeHelper.utc_now()
+      |> Map.merge(%{hour: 0, minute: 0, second: 0})
+
     Enum.each(1..total, fn number ->
-      create_order(number)
+      create_order(number, starting_time, orders_per_second)
     end)
   end
 
-  defp create_order(number) do
+  defp create_order(number, starting_time, orders_per_second) do
     Multi.new()
-    |> insert_order(number)
+    |> insert_order(number, starting_time, orders_per_second)
     |> insert_order_items(number)
     |> insert_shipments()
     |> HugeSeller.Repo.transaction()
@@ -74,11 +78,13 @@ defmodule GenerateOrders do
     end
   end
 
-  defp insert_order(multi, number) do
+  defp insert_order(multi, number, starting_time, orders_per_second) do
+    seconds = orders_per_second * div(number, orders_per_second)
+
     params = %{
       code: "O#{number}",
       store_code: "S1",
-      created_at: DateTime.utc_now(),
+      created_at: DateTime.add(starting_time, seconds),
       platform_status: "pl_new"
     }
 
