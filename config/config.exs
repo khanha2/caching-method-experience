@@ -20,8 +20,6 @@ config :huge_seller, HugeSeller.ElasticCluster,
   indexes: %{
     orders: %{
       settings: "priv/elasticsearch/orders.json",
-      store: HugeSeller.ElasticStore,
-      sources: [HugeSeller.Schema.Order],
       bulk_page_size: 1000,
       bulk_wait_interval: 15000,
       bulk_action: "index"
