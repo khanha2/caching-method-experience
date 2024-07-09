@@ -57,7 +57,7 @@ defmodule GenerateOrders do
   end
 
   defp create_order(number, starting_time, orders_per_second) do
-    seconds = orders_per_second * div(number, orders_per_second)
+    seconds = div(number, orders_per_second)
     created_at = DateTime.add(starting_time, seconds)
     Logger.info("Creating order #{number} at #{created_at}")
 
