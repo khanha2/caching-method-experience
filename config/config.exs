@@ -16,15 +16,7 @@ config :huge_seller, HugeSeller.ElasticCluster,
     recv_timeout: :timer.minutes(1),
     hackney: [pool: :huge_seller]
   ],
-  json_library: Jason,
-  indexes: %{
-    orders: %{
-      settings: "priv/elasticsearch/orders.json",
-      bulk_page_size: 1000,
-      bulk_wait_interval: 15000,
-      bulk_action: "index"
-    }
-  }
+  json_library: Jason
 
 # Use Jason for JSON parsing in Phoenix
 # config :phoenix, :json_library, Jason
