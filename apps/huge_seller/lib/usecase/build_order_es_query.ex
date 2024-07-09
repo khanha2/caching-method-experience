@@ -77,7 +77,10 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
         end)
 
       shipment_created_time_condition_map =
-        build_created_time_condition(data[:shipment_created_from], data[:shipment_created_to])
+        build_shipment_created_time_condition(
+          data[:shipment_created_from],
+          data[:shipment_created_to]
+        )
 
       shipment_condition_map =
         params
