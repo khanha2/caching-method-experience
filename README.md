@@ -1,3 +1,7 @@
+# Huge Seller for testing query method
+
+## Setup enviroment
+
 Start postgres
 
 Create Elastic network
@@ -16,4 +20,12 @@ Start kibana
 
 ```bash
 docker run -d --name kibana-71722 --net elastic -p 15601:5601 -e "ELASTICSEARCH_HOSTS=http://elastic-71722:9200" -e "ELASTICSEARCH_USERNAME=elastic" -e "ELASTICSEARCH_PASSWORD=changeme" kibana:7.17.22
+```
+
+# Migration
+
+Migration Elasticsearch
+
+```bash
+mix run --eval "HugeSeller.Tasks.migrate_es"
 ```
