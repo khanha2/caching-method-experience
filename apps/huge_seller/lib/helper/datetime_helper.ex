@@ -4,4 +4,9 @@ defmodule HugeSeller.DateTimeHelper do
     |> DateTime.from_naive!("Etc/UTC")
     |> DateTime.truncate(:second)
   end
+
+  def utc_now do
+    DateTime.utc_now()
+    |> DateTime.truncate(:second)
+  end
 end
