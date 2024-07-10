@@ -317,6 +317,19 @@ POST orders/_update/O1111
 }
 ```
 
+Put more fields into an index
+
+```
+PUT /orders/_mapping
+{
+  "properties": {
+    "updated_at": {
+      "type": "date"
+    }
+  }
+}
+```
+
 ## Testing result
 
 Number of orders: 3.334.683
