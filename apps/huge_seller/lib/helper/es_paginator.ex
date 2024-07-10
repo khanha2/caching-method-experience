@@ -23,27 +23,24 @@ defmodule HugeSeller.EsPaginator do
   Return query result with pagination
   """
   def paginate(query, cluster, index, params \\ %{}) do
-    with {:ok, data} <- HugeSeller.Parser.cast(params, @schema) do
-      page = data.page || @default_page
-      size = data.size || @default_size
-      from = size * (page - 1)
-
-      # Adjust the Elasticsearch query to include pagination
-      query = Map.put(query, "from", from)
-      query = Map.put(query, "size", size)
-
-      # Execute the search query
-      IO.inspect(Elasticsearch.post(cluster, "/#{index}/_doc/_search", query))
-
-      # total = repo.aggregate(query, :count, :id)
-
-      # pagination = %{
-      #   page: page,
-      #   size: size,
-      #   total: total
-      # }
-
-      # entries = from(query, limit: ^size, offset: ^offset) |> repo.all()
+    with {:ok, data} <- HugeSeller.Parser.cast(params, @schema),
+         search_query <- prepare_search_query(query, data),
+         {:ok, count_response} <- Elasticsearch.post(cluster, "/#{index}/_doc/_count", query),
+         {:ok, search_response} <-
+           Elasticsearch.post(cluster, "/#{index}/_doc/_search", search_query) do
+      %{"count" => total} = count_response
+      %{"hits" => %{"hits" => hits}} = search_response
+      pagination = %{total: total, page: data.page, size: data.size}
+      {:ok, {entries, pagination}}
     end
+  end
+
+  defp prepare_search_query(query, data) do
+    page = data.page || @default_page
+    size = data.size || @default_size
+    from = size * (page - 1)
+
+    # Adjust the Elasticsearch query to include pagination
+    Map.merge(query, %{"from" => from, "size" => size})
   end
 end
