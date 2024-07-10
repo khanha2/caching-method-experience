@@ -66,52 +66,52 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
 
   def perform(params) do
     with {:ok, data} <- Parser.cast(params, @schema) do
-      created_time_condition_map =
-        build_created_time_condition(data[:created_from], data[:created_to])
+      order_conditions =
+        [build_created_time_condition(data[:created_from], data[:created_to])]
 
-      condition_map =
+      order_conditions =
         params
         |> Map.take(@order_fields)
-        |> Enum.reduce(created_time_condition_map, fn
+        |> Enum.reduce(order_conditions, fn
           {_key, nil}, acc ->
             acc
 
           {key, value}, acc ->
-            Map.merge(acc, build_order_condition(key, value))
+            [build_order_condition(key, value) | acc]
         end)
 
-      shipment_created_time_condition_map =
+      shipment_conditions =
         build_shipment_created_time_condition(
           data[:shipment_created_from],
           data[:shipment_created_to]
         )
 
-      shipment_condition_map =
+      shipment_conditions =
         params
         |> Map.take(@shipment_fields)
-        |> Enum.reduce(shipment_created_time_condition_map, fn
+        |> Enum.reduce(shipment_conditions, fn
           {_key, nil}, acc ->
             acc
 
           {key, value}, acc ->
-            Map.merge(acc, build_shipment_condition(key, value))
+            [build_shipment_condition(key, value) | acc]
         end)
 
-      condition_map =
-        if Map.keys(shipment_condition_map) == [] do
-          condition_map
+      order_conditions =
+        if shipment_conditions == [] do
+          order_conditions
         else
-          Map.put(
-            condition_map,
-            "nested",
-            %{
+          condition = %{
+            "nested" => %{
               "path" => "shipments",
-              "query" => %{"match_all" => shipment_condition_map}
+              "query" => %{"bool" => %{"should" => shipment_conditions}}
             }
-          )
+          }
+
+          [condition | order_conditions]
         end
 
-      {:ok, %{"query" => %{"match_all" => condition_map}}}
+      {:ok, %{"query" => %{"bool" => %{"should" => order_conditions}}}}
     end
   end
 
