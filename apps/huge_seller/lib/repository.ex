@@ -1,38 +1,23 @@
 defmodule HugeSeller.Repository do
-  alias HugeSeller.LocalCache
+  alias HugeSeller.ElasticCluster
   alias HugeSeller.Repo
 
-  alias HugeSeller.Schema.Delivery
-  alias HugeSeller.Schema.Store
-  alias HugeSeller.Schema.Warehouse
-
   @doc """
-  List cached stores
+  Count orders by ES
   """
-  @spec list_cached_stores() :: [Store.t()]
-  def list_cached_stores do
-    LocalCache.get_or_set("stores", fn ->
-      Repo.all(Store)
-    end)
+  @spec count_es_orders(query :: map()) :: {:ok, integer()} | {:error, any()}
+  def count_es_orders do
+    with {:ok, count_response} <-
+           Elasticsearch.post(ElasticCluster, "/#{index}/_doc/_count", query) do
+      {:ok, count_response["count"]}
+    end
   end
 
   @doc """
-  List cached warehouses
+  Count orders
   """
-  @spec list_cached_warehouses() :: [Warehouse.t()]
-  def list_cached_warehouses do
-    LocalCache.get_or_set("warehouses", fn ->
-      Repo.all(Warehouse)
-    end)
-  end
-
-  @doc """
-  List cached deliveries
-  """
-  @spec list_cached_deliveries() :: [Delivery.t()]
-  def list_cached_deliveries do
-    LocalCache.get_or_set("deliveries", fn ->
-      Repo.all(Delivery)
-    end)
+  @spec count_orders(query :: Ecto.Query.t()) :: {:ok, integer()} | {:error, any()}
+  def count_orders do
+    HugeSeller.Repo.aggregate(query, :count, :id)
   end
 end
