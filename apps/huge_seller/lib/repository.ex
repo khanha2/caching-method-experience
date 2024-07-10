@@ -1,6 +1,5 @@
 defmodule HugeSeller.Repository do
   alias HugeSeller.ElasticCluster
-  alias HugeSeller.Repo
 
   @doc """
   Count orders by ES

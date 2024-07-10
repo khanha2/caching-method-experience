@@ -73,7 +73,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
         |> build_created_time_condition(data[:created_from], data[:created_to])
 
       query =
-        params
+        data
         |> Map.take(@order_fields)
         |> Enum.reduce(query, fn
           {_key, nil}, acc ->
@@ -84,7 +84,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
         end)
 
       has_shipment_query =
-        params
+        data
         |> Map.take(@shipment_fields ++ [:shipment_created_from, :shipment_created_to])
         |> Map.keys()
         |> case do
@@ -100,7 +100,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
         )
 
       shipment_query =
-        params
+        data
         |> Map.take(@shipment_fields)
         |> Enum.reduce(shipment_query, fn
           {_key, nil}, acc ->
@@ -111,7 +111,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
         end)
 
       if has_shipment_query do
-        where(query, exists(where(shipment_query, order_id: parent_as(:order).id)))
+        {:ok, where(query, exists(where(shipment_query, order_id: parent_as(:order).id)))}
       else
         {:ok, query}
       end
@@ -137,13 +137,13 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
   end
 
   # 1.2. Build condition for other order fields
-  defp build_order_condition(query, :order_codes, value) do
-    where(query, [order], order.code in ^value)
+  defp build_order_condition(query, :order_codes, codes) do
+    where(query, [order], order.code in ^codes)
   end
 
-  defp build_order_condition(query, :platform_skus, value) do
+  defp build_order_condition(query, :platform_skus, skus) do
     item_query =
-      where(HugeSeller.Schema.OrderItem, [item], item.product_sku in ^value)
+      where(HugeSeller.Schema.OrderItem, [item], item.product_sku in ^skus)
 
     where(query, exists(where(item_query, order_id: parent_as(:order).id)))
   end
