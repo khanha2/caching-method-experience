@@ -66,56 +66,51 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
 
   def perform(params) do
     with {:ok, data} <- Parser.cast(params, @schema) do
-      order_conditions =
-        [build_created_time_condition(data[:created_from], data[:created_to])]
+      conditions =
+        case build_created_time_condition(data[:created_from], data[:created_to]) do
+          nil -> []
+          condition -> [condition]
+        end
 
-      order_conditions =
+      conditions =
         data
         |> Map.take(@order_fields)
-        |> Enum.reduce(order_conditions, fn
+        |> Enum.reduce(conditions, fn
           {_key, nil}, acc ->
             acc
 
           {key, value}, acc ->
             [build_order_condition(key, value) | acc]
         end)
-        |> Enum.filter(&(not is_nil(&1)))
 
-      shipment_conditions =
-        [
-          build_shipment_created_time_condition(
-            data[:shipment_created_from],
-            data[:shipment_created_to]
-          )
-        ]
+      conditions =
+        case build_shipment_created_time_condition(
+               data[:shipment_created_from],
+               data[:shipment_created_to]
+             ) do
+          nil -> conditions
+          condition -> [condition | conditions]
+        end
 
-      shipment_conditions =
+      conditions =
         data
         |> Map.take(@shipment_fields)
-        |> Enum.reduce(shipment_conditions, fn
+        |> Enum.reduce(conditions, fn
           {_key, nil}, acc ->
             acc
 
           {key, value}, acc ->
-            [build_shipment_condition(key, value) | acc]
-        end)
-        |> Enum.filter(&(not is_nil(&1)))
-
-      order_conditions =
-        if shipment_conditions == [] do
-          order_conditions
-        else
-          condition = %{
-            "nested" => %{
-              "path" => "shipments",
-              "query" => %{"bool" => %{"should" => shipment_conditions}}
+            condition = %{
+              "nested" => %{
+                "path" => "shipments",
+                "query" => build_shipment_condition(key, value)
+              }
             }
-          }
 
-          [condition | order_conditions]
-        end
+            [condition | acc]
+        end)
 
-      {:ok, %{"query" => %{"bool" => %{"should" => order_conditions}}}}
+      {:ok, %{"query" => %{"bool" => %{"filter" => conditions}}}}
     end
   end
 
@@ -147,18 +142,18 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
   end
 
   # 1.2. Build condition for other order fields
-  defp build_order_condition(:order_codes, value) do
-    IO.inspect(value)
-    conditions = Enum.map(value, &%{"match_phrase" => %{"code" => &1}})
+  defp build_order_condition(:order_codes, codes) do
+    conditions = Enum.map(codes, &%{"match_phrase" => %{"code" => &1}})
     %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
-  defp build_order_condition(:platform_skus, value) do
-    %{"terms" => %{"platform_skus" => value, "minimum_should_match" => 1}}
+  defp build_order_condition(:platform_skus, skus) do
+    conditions = Enum.map(skus, &%{"match_phrase" => %{"platform_skus" => &1}})
+    %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
   defp build_order_condition(key, value) do
-    %{"term" => %{to_string(key) => value}}
+    %{"match_phrase" => %{to_string(key) => value}}
   end
 
   # 2. Build shipment condition
@@ -191,13 +186,14 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
 
   # 2.2. Build condition for other shipment fields
 
-  defp build_shipment_condition(:shipment_codes, value) do
-    conditions = Enum.map(value, &%{"match_phrase" => %{"shipments.code" => &1}})
+  defp build_shipment_condition(:shipment_codes, codes) do
+    conditions = Enum.map(codes, &%{"match_phrase" => %{"shipments.code" => &1}})
     %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
-  defp build_shipment_condition(:shipment_warehouse_skus, value) do
-    %{"terms" => %{"shipments.warehouse_skus" => value, "minimum_should_match" => 1}}
+  defp build_shipment_condition(:shipment_warehouse_skus, skus) do
+    conditions = Enum.map(skus, &%{"match_phrase" => %{"shipments.warehouse_skus" => &1}})
+    %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
   defp build_shipment_condition(key, value) do
@@ -206,6 +202,6 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
       |> to_string()
       |> String.replace("shipment_", "shipments.")
 
-    %{"term" => %{key => value}}
+    %{"match_phrase" => %{key => value}}
   end
 end
