@@ -79,12 +79,15 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
           {key, value}, acc ->
             [build_order_condition(key, value) | acc]
         end)
+        |> Enum.filter(&(not is_nil(&1)))
 
       shipment_conditions =
-        build_shipment_created_time_condition(
-          data[:shipment_created_from],
-          data[:shipment_created_to]
-        )
+        [
+          build_shipment_created_time_condition(
+            data[:shipment_created_from],
+            data[:shipment_created_to]
+          )
+        ]
 
       shipment_conditions =
         params
@@ -96,6 +99,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
           {key, value}, acc ->
             [build_shipment_condition(key, value) | acc]
         end)
+        |> Enum.filter(&(not is_nil(&1)))
 
       order_conditions =
         if shipment_conditions == [] do
@@ -136,7 +140,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
       end
 
     if conditions == [] do
-      %{}
+      nil
     else
       %{"range" => %{"created_at" => Enum.into(conditions, %{})}}
     end
@@ -177,7 +181,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
       end
 
     if conditions == [] do
-      %{}
+      nil
     else
       %{"range" => %{"shipments.created_at" => Enum.into(conditions, %{})}}
     end
