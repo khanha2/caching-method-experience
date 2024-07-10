@@ -317,6 +317,36 @@ POST orders/_update/O1111
 }
 ```
 
+## Testing result
+
+Number of orders: 3.334.683
+
+Count query
+
+```
+"Retriving orders with platform status is pl_new"
+"ES: retrive 3334682 orders with execution time is 31.242 ms"
+"PG: retrive 3334684 orders with execution time is 5256.902 ms"
+"Retriving orders with shipment warehoure status wh_new"
+"ES: retrive 2532254 orders with execution time is 118.046 ms"
+"PG: retrive 2532255 orders with execution time is 5521.096 ms"
+"Retriving orders with shipment warehoure status wh_packed"
+"ES: retrive 1 orders with execution time is 25.193 ms"
+"PG: retrive 1 orders with execution time is 13.989 ms"
+```
+
+Pagination query
+
+```
+
+```
+
+Update query
+
+```
+
+```
+
 ## References
 
 Update Elasticsearch document:
