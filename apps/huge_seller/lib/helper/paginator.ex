@@ -11,12 +11,12 @@ defmodule HugeSeller.Paginator do
     page: [
       type: :integer,
       default: @default_page,
-      validate: {:number, greater_than_or_equal_to: 1}
+      number: [greater_than_or_equal_to: 1]
     ],
     size: [
       type: :integer,
       default: @default_size,
-      validate: {:number, [greater_than_or_equal_to: 1, less_than_or_equal_to: 100]}
+      number: [greater_than_or_equal_to: 1, less_than_or_equal_to: 100]
     ]
   }
 
@@ -24,25 +24,21 @@ defmodule HugeSeller.Paginator do
   Return query result with pagination
   """
   @spec paginate(query :: Ecto.Query.t(), repo :: Ecto.Repo.t(), params :: map) ::
-          {:ok, {list(struct()), %{page: integer(), size: integer(), total: integer()}}}
-          | {:error, any()}
+          {:ok, list(struct())} | {:error, any()}
   def paginate(query, repo, params \\ %{}) do
     with {:ok, data} <- HugeSeller.Parser.cast(params, @schema) do
       page = data.page || @default_page
       size = data.size || @default_size
       offset = size * (page - 1)
 
-      total = repo.aggregate(query, :count, :id)
-
       pagination = %{
         page: page,
-        size: size,
-        total: total
+        size: size
       }
 
       entries = from(query, limit: ^size, offset: ^offset) |> repo.all()
 
-      {:ok, {entries, pagination}}
+      {:ok, entries}
     end
   end
 end
