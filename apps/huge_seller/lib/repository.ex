@@ -17,7 +17,7 @@ defmodule HugeSeller.Repository do
   Count orders
   """
   @spec count_orders(query :: Ecto.Query.t()) :: {:ok, integer()} | {:error, any()}
-  def count_orders do
+  def count_orders(query) do
     HugeSeller.Repo.aggregate(query, :count, :id)
   end
 end
