@@ -1,4 +1,6 @@
 defmodule HugeSeller.Usecase.UpdateOrderCache do
+  @orders_index HugeSeller.ElasticClusterIndex.orders()
+
   @code_type [type: :string, length: [min: 1]]
 
   @schema %{
@@ -9,23 +11,27 @@ defmodule HugeSeller.Usecase.UpdateOrderCache do
 
   def perform(params) do
     with {:ok, %{code: code} = data} <- HugeSeller.Parser.cast(params, @schema),
-         query <- build_query(data),
+         {:ok, query} <- build_query(data),
          {:ok, _result} <-
            Elasticsearch.post(
              HugeSeller.ElasticCluster,
              "/#{@orders_index}/_update/#{code}",
              query
            ) do
+      :ok
     end
   end
 
   defp build_query(data) do
-    query =
-      data
-      |> Map.drop([:code])
-      |> Enum.filter(fn {_key, value} -> not is_nil(value) end)
-      |> Enum.into(%{})
+    data
+    |> Map.drop([:code])
+    |> Enum.filter(fn {_key, value} -> not is_nil(value) end)
+    |> case do
+      [] ->
+        {:error, "no value to be updated"}
 
-    %{"doc" => query}
+      query ->
+        {:ok, %{"doc" => Enum.into(query, %{})}}
+    end
   end
 end

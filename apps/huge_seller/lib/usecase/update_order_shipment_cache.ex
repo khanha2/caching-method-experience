@@ -1,4 +1,6 @@
 defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
+  @orders_index HugeSeller.ElasticClusterIndex.orders()
+
   @code_type [type: :string, length: [min: 1]]
 
   @schema %{
@@ -13,7 +15,7 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
 
   def perform(params) do
     with {:ok, %{order_code: order_code} = data} <- HugeSeller.Parser.cast(params, @schema),
-         {script, query} <- build_update_query(data),
+         {:ok, query} <- build_update_query(data),
          {:ok, _result} <-
            Elasticsearch.post(
              HugeSeller.ElasticCluster,
@@ -30,28 +32,34 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
   ]
 
   defp build_update_query(data) do
-    change_script =
-      data
-      |> Map.drop(@key_fields)
-      |> Enum.reduce([], fn
-        {_key, nil}, acc ->
-          acc
+    # change_script =
+    data
+    |> Map.drop(@key_fields)
+    |> Enum.reduce([], fn
+      {_key, nil}, acc ->
+        acc
 
-        {key, _value}, acc ->
-          script_key = String.replace(key, "_", ".")
-          ["#{script_key} = #{value}" | acc]
-      end)
-      |> Enum.join(";\n")
+      {key, value}, acc ->
+        script_key = String.replace(key, "_", ".")
+        ["#{script_key} = #{value}" | acc]
+    end)
+    |> case do
+      [] ->
+        {:error, "no value to be updated"}
 
-    script =
-      """
-      ctx._source.shipments.forEach(shipment -> {
-        if (shipment.code == params.shipment_code) {
-          #{change_script}
-        }
-      });
-      """
+      change_parts ->
+        change_script = Enum.join(change_parts, ";\n")
 
-    %{"script" => script, "params" => data}
+        script =
+          """
+          ctx._source.shipments.forEach(shipment -> {
+            if (shipment.code == params.shipment_code) {
+              #{change_script}
+            }
+          });
+          """
+
+        {:ok, %{"script" => script, "params" => data}}
+    end
   end
 end
