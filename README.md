@@ -389,6 +389,7 @@ Update query
 - List large data on UI, for examples: B2C orders, order reconciliation entries.
 - Text searching.
 - Support integrated partners access huge data with ES scroll query.
+- Data analytics.
 
 ## References
 
