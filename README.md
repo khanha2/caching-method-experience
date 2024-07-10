@@ -379,6 +379,7 @@ Update query
 **Cons**
 
 - The ES data may not up to date when the connection between Opollo and ES has issues.
+- In case we define a new index to query in ES, we must scan all data in the main DB to apply the new index.
 
 ### Application contexts
 
