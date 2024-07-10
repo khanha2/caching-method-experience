@@ -5,7 +5,7 @@ defmodule HugeSeller.EsPaginator do
 
   # Determine the scroll timeout for pagination
   # 1 minute
-  @scroll_timeout "1m"
+  @scroll_timeout "15s"
 
   @default_size 20
 
@@ -23,8 +23,8 @@ defmodule HugeSeller.EsPaginator do
   """
   def paginate(query, cluster, index, params \\ %{}) do
     with {:ok, data} <- HugeSeller.Parser.cast(params, @schema),
-         search_query <- prepare_search_query(data),
-         {:ok, response} <- query_entries(search_query, cluster) do
+         search_query <- prepare_search_query(query, data),
+         {:ok, response} <- query_entries(search_query, cluster, index) do
       entries =
         response
         |> Map.get("hits", %{})
@@ -46,14 +46,14 @@ defmodule HugeSeller.EsPaginator do
     end
   end
 
-  defp query_entries(%{scroll_id: scroll_id}, cluster) do
+  defp query_entries(%{scroll_id: scroll_id}, cluster, _index) do
     Elasticsearch.post(cluster, "/_search/scroll", %{
       "scroll" => @scroll_timeout,
       "scroll_id" => scroll_id
     })
   end
 
-  defp query_entries(query, cluster) do
+  defp query_entries(query, cluster, index) do
     Elasticsearch.post(cluster, "/#{index}/_doc/_search?scroll=#{@scroll_timeout}", query)
   end
 end

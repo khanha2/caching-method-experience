@@ -5,8 +5,8 @@ defmodule HugeSeller.Repository do
   @doc """
   Count orders by ES
   """
-  @spec count_es_orders(query :: map()) :: {:ok, integer()} | {:error, any()}
-  def count_es_orders do
+  @spec count_es_orders(query :: map(), index :: String.t()) :: {:ok, integer()} | {:error, any()}
+  def count_es_orders(query, index) do
     with {:ok, count_response} <-
            Elasticsearch.post(ElasticCluster, "/#{index}/_doc/_count", query) do
       {:ok, count_response["count"]}
