@@ -1,4 +1,6 @@
 defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
+  require Logger
+
   @orders_index HugeSeller.ElasticClusterIndex.orders()
 
   @code_type [type: :string, length: [min: 1]]
@@ -14,14 +16,10 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
   }
 
   def perform(params) do
-    with {:ok, %{order_code: order_code} = data} <- HugeSeller.Parser.cast(params, @schema),
+    with {:ok, %{order_code: order_code, shipment_code: shipment_code} = data} <-
+           HugeSeller.Parser.cast(params, @schema),
          {:ok, query} <- build_update_query(data),
-         {:ok, _result} <-
-           Elasticsearch.post(
-             HugeSeller.ElasticCluster,
-             "/#{@orders_index}/_update/#{order_code}",
-             query
-           ) do
+         {:ok, _result} <- cache_shipment(order_code, shipment_code, query) do
       :ok
     end
   end
@@ -59,5 +57,22 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
 
         {:ok, %{"script" => %{"source" => script, "params" => data}}}
     end
+  end
+
+  defp cache_shipment(order_code, shipment_code, query) do
+    {time, result} =
+      :time.tc(fn ->
+        Elasticsearch.post(
+          HugeSeller.ElasticCluster,
+          "/#{@orders_index}/_update/#{order_code}",
+          query
+        )
+      end)
+
+    Logger.warning(
+      "Updated cache for order #{order_code} shipment #{shipment_code} with execution time is #{time / 1_000} ms"
+    )
+
+    result
   end
 end
