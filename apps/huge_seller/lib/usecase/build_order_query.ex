@@ -189,6 +189,7 @@ defmodule HugeSeller.Usecase.BuildOrderQuery do
       key
       |> to_string()
       |> String.replace("shipment_", "")
+      |> String.to_atom()
 
     where(query, [shipment], field(shipment, ^key) == ^value)
   end
