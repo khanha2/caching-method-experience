@@ -8,7 +8,7 @@ alias HugeSeller.Usecase.BuildOrderQuery
 
 orders_index = ElasticClusterIndex.orders()
 
-IO.inspect("Retriving orders with platform status")
+IO.inspect("Retriving orders with platform status is pl_new")
 
 params = %{
   page: 1000,
@@ -30,12 +30,12 @@ IO.inspect("ES: retrive #{es_count} orders with execution time is #{es_time / 1_
 
 IO.inspect("PG: retrive #{pg_count} orders with execution time is #{pg_time / 1_000} ms")
 
-IO.inspect("Retriving orders with warehoure status")
+IO.inspect("Retriving orders with warehoure status wh_packed")
 
 params = %{
   page: 1000,
   size: 100,
-  shipment_warehouse_status: "wh_packed"
+  shipment_warehouse_status: "xxx"
 }
 
 {:ok, es_query} = BuildOrderEsQuery.perform(params)
