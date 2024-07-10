@@ -14,8 +14,13 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
   }
 
   def perform(params) do
-    with {:ok, %{order_code: order_code} = data} <- HugeSeller.Parser.cast(params, @schema),
+    with {:ok, %{order_code: order_code, shipment_code: shipment_code} = data} <-
+           HugeSeller.Parser.cast(params, @schema),
          {:ok, query} <- build_update_query(data),
+         _ <-
+           IO.inspect(
+             "Update cache for order #{order_code}, shipment #{shipment_code}, query #{inspect(query)}"
+           ),
          {:ok, _result} <-
            Elasticsearch.post(
              HugeSeller.ElasticCluster,

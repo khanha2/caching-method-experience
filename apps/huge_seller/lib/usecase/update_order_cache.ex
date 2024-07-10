@@ -12,6 +12,7 @@ defmodule HugeSeller.Usecase.UpdateOrderCache do
   def perform(params) do
     with {:ok, %{code: code} = data} <- HugeSeller.Parser.cast(params, @schema),
          {:ok, query} <- build_query(data),
+         _ <- IO.inspect("Update cache for order #{code}, query #{inspect(query)}"),
          {:ok, _result} <-
            Elasticsearch.post(
              HugeSeller.ElasticCluster,
