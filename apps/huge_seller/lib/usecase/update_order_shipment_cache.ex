@@ -45,7 +45,11 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
         acc
 
       {key, value}, acc ->
-        script_key = String.replace(key, "_", ".")
+        script_key =
+          key
+          |> to_string()
+          |> String.replace("_", ".")
+
         ["#{script_key} = #{value}" | acc]
     end)
     |> case do
