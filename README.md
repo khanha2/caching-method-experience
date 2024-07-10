@@ -338,13 +338,20 @@ Count query
 Pagination query
 
 ```
-
+"Retriving orders with platform status is pl_new"
+"ES: retrive first page with execution time is 89.508 ms"
+"ES: retrive 10 pages with execution time is 161.94 ms"
+"PG: retrive first page with execution time is 5238.789 ms"
+"PG: retrive 10 pages with execution time is 4807.814 ms"
 ```
 
 Update query
 
 ```
-
+[warning] Updated shipment O13000-1 with execution time is 20.727 ms
+[warning] Updated cache for order O13000 shipment O13000-1 with execution time is 34.602 ms
+"ES: retrive 1 orders with execution time is 168.98 ms"
+"PG: retrive 1 orders with execution time is 6.732 ms"
 ```
 
 ## References

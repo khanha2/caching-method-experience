@@ -8,23 +8,26 @@ orders_index = HugeSeller.ElasticClusterIndex.orders()
 # Test updating shipment
 :ok =
   HugeSeller.Usecase.UpdateOrderShipment.perform(%{
-    order_code: "O10000",
-    shipment_code: "O10000-1",
+    order_code: "O13000",
+    shipment_code: "O13000-1",
     shipment_status: "packed",
-    shipment_warehouse_shipment_code: "WH-O10000-1",
+    shipment_warehouse_shipment_code: "WH-O13000-1",
     shipment_warehouse_status: "wh_packed",
-    shipment_tracking_code: "DL-O10000-1",
+    shipment_tracking_code: "DL-O13000-1",
     shipment_delivery_status: "dl_new"
   })
 
 params = %{
-  shipment_codes: "O10000-1",
+  shipment_codes: "O13000-1",
   shipment_status: "packed",
   shipment_warehouse_status: "wh_packed",
   shipment_delivery_status: "dl_new"
 }
 
 {:ok, es_query} = BuildOrderEsQuery.perform(params)
+
+# Pending a minute to get the ES indexed information
+Process.sleep(1_000)
 
 {es_time, {:ok, es_count}} =
   :timer.tc(fn -> Repository.count_es_orders(es_query, orders_index) end)
