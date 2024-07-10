@@ -2,7 +2,28 @@
 
 ## Setup enviroment
 
-Start postgres
+### Testing evironment
+
+**Resource**
+
+- Number of vCPUs: 2
+- Memory limi: 6 GB
+- Virtual disk limit: 8 GB
+
+**Tools and Services**
+
+- Elixir 1.16.0
+- Main database: Postgres 12.19
+- Elasticsearch 7.17.22
+- Elasticsearch query tool: Kibana 7.12.22
+
+### Setup services
+
+Start Postgres
+
+```bash
+docker run -d --name postgres-12.19 -p 15432:5432 -e "POSTGRES_HOST_AUTH_METHOD=trust" postgres:12.19
+```
 
 Create Elastic network
 
@@ -22,12 +43,35 @@ Start kibana
 docker run -d --name kibana-71722 --net elastic -p 15601:5601 -e "ELASTICSEARCH_HOSTS=http://elastic-71722:9200" -e "ELASTICSEARCH_USERNAME=elastic" -e "ELASTICSEARCH_PASSWORD=changeme" kibana:7.17.22
 ```
 
+### Setup environment variables
+
+```bash
+export DATABASE_URL=postgres://postgres:[your postgres password]@[your localhost]:15432/huge_seller
+export ELASTICSEARCH_URL=http://[your localhost]:19200
+export ELASTICSEARCH_USERNAME=elastic
+export ELASTICSEARCH_PASSWORD=[your elastic password]
+```
+
 ## Migration
 
 Migration Elasticsearch
 
 ```bash
 mix run --eval "HugeSeller.Tasks.migrate_es"
+```
+
+Migrate Main Database
+
+```bash
+mix ecto.create
+mix ecto.migrate
+```
+
+## Generate orders
+
+```bash
+cd apps/huge_seller
+mix run priv/scripts/6_genrate_orders.ex
 ```
 
 ## Elasticsearch query pattern
@@ -230,6 +274,48 @@ The generated Elasticsearch query:
 ```
 
 ## Update Elasticsearch document
+
+Update an order with specific values
+
+```
+POST orders/_update/O1111
+{
+  "doc": {
+    "status": "status",
+    "platform_status": "pl_status"
+  }
+}
+```
+
+Update a shipment inside an order document with specific values
+
+```dsl
+POST orders/_update/O1111
+{
+  "script": {
+    "params": {
+      "order_code": "O10000",
+      "shipment_code": "O10000-1",
+      "shipment_status": "packed",
+      "shipment_warehouse_shipment_code": "WH-O10000-1",
+      "shipment_warehouse_status": "wh_packed",
+      "shipment_tracking_code": "DL-O10000-1",
+      "shipment_delivery_status": "dl_new"
+    },
+    "source": """
+      for (int i = 0; i < ctx._source.shipments.size(); i++) {
+        if (ctx._source.shipments[i].code == params.shipment_code) {
+          ctx._source.shipments[i].shipment.delivery_status = params.shipment_code;
+          ctx._source.shipments[i].shipment.tracking_code = params.shipment_status;
+          ctx._source.shipments[i].shipment.warehouse_status = params.shipment_warehouse_status;
+          ctx._source.shipments[i].shipment.warehouse_shipment_code = params.shipment_warehouse_shipment_code;
+          ctx._source.shipments[i].shipment.status = params.shipment_status;
+        }
+      }
+      """
+  }
+}
+```
 
 ## References
 
