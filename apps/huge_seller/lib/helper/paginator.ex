@@ -31,11 +31,6 @@ defmodule HugeSeller.Paginator do
       size = data.size || @default_size
       offset = size * (page - 1)
 
-      pagination = %{
-        page: page,
-        size: size
-      }
-
       entries = from(query, limit: ^size, offset: ^offset) |> repo.all()
 
       {:ok, entries}
