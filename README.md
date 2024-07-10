@@ -22,7 +22,7 @@ Start kibana
 docker run -d --name kibana-71722 --net elastic -p 15601:5601 -e "ELASTICSEARCH_HOSTS=http://elastic-71722:9200" -e "ELASTICSEARCH_USERNAME=elastic" -e "ELASTICSEARCH_PASSWORD=changeme" kibana:7.17.22
 ```
 
-# Migration
+## Migration
 
 Migration Elasticsearch
 
@@ -30,7 +30,7 @@ Migration Elasticsearch
 mix run --eval "HugeSeller.Tasks.migrate_es"
 ```
 
-# Elasticsearch query pattern
+## Elasticsearch query pattern
 
 Suppose we have an order query parameters:
 
@@ -59,7 +59,6 @@ The generated Elasticsearch query:
 ```json
 {
   "bool": {
-    "must": [],
     "filter": [
       // Filter by order code
       {
@@ -229,3 +228,11 @@ The generated Elasticsearch query:
   }
 }
 ```
+
+## Update Elasticsearch document
+
+## References
+
+Update Elasticsearch document:
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
