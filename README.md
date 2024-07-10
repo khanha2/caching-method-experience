@@ -385,8 +385,10 @@ Update query
 
 - Count orders in each status
 - Get order fulfillments that can be packed/confirmed ready to ship to perform actions
+
   Instead of querying order fulfillments by customized cursors in PG, we use scroll_id,
   which is fully supported in ES.
+
 - List large data on UI, for examples: B2C orders, order reconciliation entries.
 - Text searching.
 - Support integrated partners access huge data with ES scroll query.
