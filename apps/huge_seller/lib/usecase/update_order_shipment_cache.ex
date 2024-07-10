@@ -14,13 +14,8 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
   }
 
   def perform(params) do
-    with {:ok, %{order_code: order_code, shipment_code: shipment_code} = data} <-
-           HugeSeller.Parser.cast(params, @schema),
+    with {:ok, %{order_code: order_code} = data} <- HugeSeller.Parser.cast(params, @schema),
          {:ok, query} <- build_update_query(data),
-         _ <-
-           IO.inspect(
-             "Update cache for order #{order_code}, shipment #{shipment_code}, query #{inspect(query)}"
-           ),
          {:ok, _result} <-
            Elasticsearch.post(
              HugeSeller.ElasticCluster,
@@ -44,31 +39,25 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
       {_key, nil}, acc ->
         acc
 
-      {key, value}, acc ->
+      {key, _value}, acc ->
         script_key =
           key
           |> to_string()
-          |> String.replace("_", ".")
+          |> String.replace("shipment_", "")
 
-        ["#{script_key} = #{value}" | acc]
+        ["ctx._source.shipments[i].#{script_key} = params.#{key}" | acc]
     end)
     |> case do
       [] ->
         {:error, "no value to be updated"}
 
       change_parts ->
-        change_script = Enum.join(change_parts, ";\n")
+        change_script = Enum.join(change_parts, ";")
 
         script =
-          """
-          ctx._source.shipments.forEach(shipment -> {
-            if (shipment.code == params.shipment_code) {
-              #{change_script}
-            }
-          });
-          """
+          "for (int i = 0; i < ctx._source.shipments.size(); i++) {if (ctx._source.shipments[i].code == params.shipment_code) {#{change_script};}}"
 
-        {:ok, %{"script" => script, "params" => data}}
+        {:ok, %{"script" => %{"source" => script, "params" => data}}}
     end
   end
 end
