@@ -61,7 +61,7 @@ defmodule HugeSeller.Usecase.Usecase.UpdateOrderShipmentCache do
 
   defp cache_shipment(order_code, shipment_code, query) do
     {time, result} =
-      :time.tc(fn ->
+      :timer.tc(fn ->
         Elasticsearch.post(
           HugeSeller.ElasticCluster,
           "/#{@orders_index}/_update/#{order_code}",

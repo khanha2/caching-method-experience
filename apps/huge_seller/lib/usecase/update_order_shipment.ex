@@ -1,6 +1,8 @@
 defmodule HugeSeller.Usecase.UpdateOrderShipment do
   import Ecto.Query
 
+  require Logger
+
   @code_type [type: :string, length: [min: 1]]
 
   @schema %{
@@ -30,20 +32,17 @@ defmodule HugeSeller.Usecase.UpdateOrderShipment do
         {:error, "no value to be updated"}
 
       values ->
-        values =
-          Enum.into(values, [], fn {key, value} ->
-            key =
-              key
-              |> to_string()
-              |> String.replace("shipment_", "")
-              |> String.to_atom()
+        values
+        |> Enum.into([], fn {key, value} ->
+          key =
+            key
+            |> to_string()
+            |> String.replace("shipment_", "")
+            |> String.to_atom()
 
-            {key, value}
-          end)
-
-        HugeSeller.Schema.Shipment
-        |> where(code: ^params.shipment_code)
-        |> HugeSeller.Repo.update_all(set: values)
+          {key, value}
+        end)
+        |> update_shipment(params.shipment_code)
         |> case do
           {1, _nil} ->
             :ok
@@ -52,5 +51,18 @@ defmodule HugeSeller.Usecase.UpdateOrderShipment do
             {:error, "failed to update shipment"}
         end
     end
+  end
+
+  defp update_shipment(values, shipment_code) do
+    {time, result} =
+      :timer.tc(fn ->
+        HugeSeller.Schema.Shipment
+        |> where(code: ^shipment_code)
+        |> HugeSeller.Repo.update_all(set: values)
+      end)
+
+    Logger.warning("Updated shipment #{shipment_code} with execution time is #{time / 1_000} ms")
+
+    result
   end
 end
