@@ -10,12 +10,12 @@ defmodule HugeSeller.EsPaginator do
     page: [
       type: :integer,
       default: @default_page,
-      validate: {:number, greater_than_or_equal_to: 1}
+      number: [greater_than_or_equal_to: 1]
     ],
     size: [
       type: :integer,
       default: @default_size,
-      validate: {:number, [greater_than_or_equal_to: 1, less_than_or_equal_to: 100]}
+      number: [greater_than_or_equal_to: 1, less_than_or_equal_to: 100]
     ]
   }
 
