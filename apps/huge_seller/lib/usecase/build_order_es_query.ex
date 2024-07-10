@@ -70,7 +70,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
         [build_created_time_condition(data[:created_from], data[:created_to])]
 
       order_conditions =
-        params
+        data
         |> Map.take(@order_fields)
         |> Enum.reduce(order_conditions, fn
           {_key, nil}, acc ->
@@ -90,7 +90,7 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
         ]
 
       shipment_conditions =
-        params
+        data
         |> Map.take(@shipment_fields)
         |> Enum.reduce(shipment_conditions, fn
           {_key, nil}, acc ->
@@ -148,7 +148,9 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
 
   # 1.2. Build condition for other order fields
   defp build_order_condition(:order_codes, value) do
-    %{"terms" => %{"order_code" => value}}
+    IO.inspect(value)
+    conditions = Enum.map(value, &%{"match_phrase" => %{"code" => &1}})
+    %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
   defp build_order_condition(:platform_skus, value) do
@@ -190,7 +192,8 @@ defmodule HugeSeller.Usecase.BuildOrderEsQuery do
   # 2.2. Build condition for other shipment fields
 
   defp build_shipment_condition(:shipment_codes, value) do
-    %{"terms" => %{"shipments.code" => value}}
+    conditions = Enum.map(value, &%{"match_phrase" => %{"shipments.code" => &1}})
+    %{"bool" => %{"should" => conditions, "minimum_should_match" => 1}}
   end
 
   defp build_shipment_condition(:shipment_warehouse_skus, value) do
