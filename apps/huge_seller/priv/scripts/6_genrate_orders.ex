@@ -46,12 +46,8 @@ defmodule GenerateOrders do
 
   @delivery_platform_codes ["DL1", "DL2"]
 
-  def perform(total, orders_per_second \\ 1) do
-    starting_time =
-      HugeSeller.DateTimeHelper.utc_now()
-      |> Map.merge(%{hour: 0, minute: 0, second: 0})
-
-    Enum.each(1..total, fn number ->
+  def perform(total, starting_time, stating_id, orders_per_second \\ 1) do
+    Enum.each(stating_id..total, fn number ->
       create_order(number, starting_time, orders_per_second)
     end)
   end
@@ -63,7 +59,7 @@ defmodule GenerateOrders do
 
     Multi.new()
     |> insert_order(number, created_at)
-    |> insert_order_items(number)
+    |> insert_order_items()
     |> insert_shipments()
     |> HugeSeller.Repo.transaction()
     |> case do
@@ -94,7 +90,9 @@ defmodule GenerateOrders do
     Multi.insert(multi, :order, Order.changeset(%Order{}, params))
   end
 
-  defp insert_order_items(multi, total_items) do
+  defp insert_order_items(multi) do
+    total_items = Enum.random(1..5)
+
     items =
       Enum.map(1..total_items, fn _ ->
         sku = Enum.random(@skus)
@@ -280,4 +278,6 @@ defmodule GenerateOrders do
   end
 end
 
-GenerateOrders.perform(100_000_000, 1000)
+starting_time = ~U[2024-07-09 00:00:00Z]
+
+GenerateOrders.perform(100_000_000, starting_time, 1, 1000)
