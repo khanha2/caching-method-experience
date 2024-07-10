@@ -390,6 +390,7 @@ Update query
 - Text searching.
 - Support integrated partners access huge data with ES scroll query.
 - Data analytics.
+- Storing histories.
 
 ## References
 
